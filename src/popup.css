@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  --primary-bg-color: #00c49a;
+  --sub-bg-color: #fb8f67;
+  --secondary-bg-color: #156064;
+  
+}

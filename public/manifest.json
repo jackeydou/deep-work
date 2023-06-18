@@ -26,7 +26,10 @@
   },
 
   "permissions": [
-    "storage"
+    "storage",
+    "tabs",
+    "activeTab",
+    "contextMenus"
   ],
 
   "host_permissions": [
