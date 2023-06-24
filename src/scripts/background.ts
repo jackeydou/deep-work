@@ -1,20 +1,25 @@
 import { EventParams, UpdateUrlData } from "../types/event";
 import { getBlockUrlStorageKey } from '../utils/index';
-import { AddToBlockListKey, GetCurrentContextMenuClickDomain, EventName, StorageKey } from '../utils/constants';
+import { EventName, StorageKey } from '../utils/constants';
 
 function setContextMenu() {
   chrome.contextMenus.create({
-    title: "[Deep Work]Add to block list",       
-    // contexts: ["tab"],
-    id: AddToBlockListKey,
+    title: "Add to Block List",
+    type: 'checkbox',
+    id: EventName.AddToBlockListKey,
+  })
+  chrome.contextMenus.create({
+    title: "Add to White List",
+    type: 'checkbox',
+    id: EventName.AddToWhiteListKey,
   })
 }
 
 function addListener() {
   chrome.contextMenus.onClicked.addListener(function(clickData) {
-    if (clickData.menuItemId == AddToBlockListKey) {
+    if (clickData.menuItemId == EventName.AddToBlockListKey) {
       chrome.runtime.sendMessage<EventParams>({
-        eventName: GetCurrentContextMenuClickDomain,
+        eventName: EventName.GetCurrentContextMenuClickDomain,
         data: {
         }
       })
@@ -32,16 +37,19 @@ chrome.runtime.onMessage.addListener((message: EventParams, sender) => {
       chrome.tabs.update({
         url: (data as UpdateUrlData).url
       })
-    } else if (eventName === AddToBlockListKey) {
-      chrome.storage.sync.get(StorageKey.BlockUrlListKey).then(res => {
+    } else if (eventName === EventName.AddToBlockListKey) {
+      chrome.storage.sync.get(StorageKey.BlockUrlListKey).then(result => {
         const domain = (data as UpdateUrlData).url;
-        if (!res[domain]) {
+        const blockDomains = result[StorageKey.BlockUrlListKey] as string[] ?? [];
+        const hasBeenBlocked = blockDomains.findIndex(it => it === domain);
+        if (!hasBeenBlocked) {
           chrome.storage.sync.set({
-            [StorageKey.BlockUrlListKey]: {
-              ...res,
-              [domain]: true
-            }
-          })
+            [StorageKey.BlockUrlListKey]: [
+              ...blockDomains,
+              domain,
+            ],
+            [getBlockUrlStorageKey(domain)]: true
+          });
         }
       })
     }

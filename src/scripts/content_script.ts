@@ -1,6 +1,6 @@
 import { EventParams } from '../types/event';
 import { getBlockUrlStorageKey } from '../utils/index';
-import { AddToBlockListKey, GetCurrentContextMenuClickDomain, EventName } from '../utils/constants';
+import { EventName } from '../utils/constants';
 
 
 function getCurrentDomain() {
@@ -14,9 +14,9 @@ function getExtensionFocusPage() {
 function addListener() {
   chrome.runtime.onMessage.addListener((message: EventParams, sender) => {
     const { eventName } = message
-    if (eventName === GetCurrentContextMenuClickDomain) {
+    if (eventName === EventName.GetCurrentContextMenuClickDomain) {
       chrome.runtime.sendMessage({
-        eventName: AddToBlockListKey,
+        eventName: EventName.AddToBlockListKey,
         data: {
           url: getCurrentDomain()
         }
