@@ -1,15 +1,17 @@
 const webpack = require("webpack");
 const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
 const srcDir = path.join(__dirname, "..", "src");
 
 module.exports = {
     entry: {
-      popup: path.join(srcDir, 'popup.tsx'),
-      focus: path.join(srcDir, 'focus.tsx'),
-      options: path.join(srcDir, 'options.tsx'),
-      background: path.join(srcDir, 'background.ts'),
-      content_script: path.join(srcDir, 'content_script.tsx'),
+      popup: path.join(srcDir, 'pages/popup.tsx'),
+      focus: path.join(srcDir, 'pages/focus.tsx'),
+      options: path.join(srcDir, 'pages/options.tsx'),
+      background: path.join(srcDir, 'scripts/background.ts'),
+      content_script: path.join(srcDir, 'scripts/content_script.ts'),
     },
     output: {
         path: path.join(__dirname, "../dist/js"),
@@ -33,7 +35,7 @@ module.exports = {
             {
                 test: /\.css$/i,
                 use: [
-                  "style-loader",
+                  MiniCssExtractPlugin.loader, // "style-loader",
                   "css-loader",
                   {
                     loader: "postcss-loader",
@@ -61,6 +63,9 @@ module.exports = {
         new CopyPlugin({
             patterns: [{ from: ".", to: "../", context: "public" }],
             options: {},
+        }),
+        new MiniCssExtractPlugin({
+          filename: "[name].[contenthash].css",
         }),
     ],
 };

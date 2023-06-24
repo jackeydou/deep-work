@@ -1,5 +1,6 @@
-import { EventParams, UpdateUrlData } from "./types/event";
-import { AddToBlockListKey, GetCurrentContextMenuClickDomain, BlockUrlListKey } from './utils/constants';
+import { EventParams, UpdateUrlData } from "../types/event";
+import { getBlockUrlStorageKey } from '../utils/index';
+import { AddToBlockListKey, GetCurrentContextMenuClickDomain, EventName, StorageKey } from '../utils/constants';
 
 function setContextMenu() {
   chrome.contextMenus.create({
@@ -24,23 +25,19 @@ function addListener() {
 setContextMenu();
 addListener();
 
-chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-  console.log('>>>>> query', tabs)
-})
-
 chrome.runtime.onMessage.addListener((message: EventParams, sender) => {
   if (sender.id === chrome.runtime.id) {
     const { eventName, data } = message;
-    if (eventName === 'update_url') {
+    if (eventName === EventName.UpdateUrl) {
       chrome.tabs.update({
         url: (data as UpdateUrlData).url
       })
     } else if (eventName === AddToBlockListKey) {
-      chrome.storage.local.get(BlockUrlListKey).then(res => {
+      chrome.storage.sync.get(StorageKey.BlockUrlListKey).then(res => {
         const domain = (data as UpdateUrlData).url;
         if (!res[domain]) {
-          chrome.storage.local.set({
-            [BlockUrlListKey]: {
+          chrome.storage.sync.set({
+            [StorageKey.BlockUrlListKey]: {
               ...res,
               [domain]: true
             }
