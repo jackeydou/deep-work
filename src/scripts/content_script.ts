@@ -1,6 +1,7 @@
 import { EventParams } from '../types/event';
 import { getBlockUrlStorageKey } from '../utils/index';
 import { EventName } from '../utils/constants';
+import { logInDev } from '../utils/dev';
 
 
 function getCurrentDomain() {
@@ -26,10 +27,12 @@ function addListener() {
 }
 
 async function main() {
+  logInDev('content script run');
   addListener();
   const domain = getCurrentDomain();
   const storageKey = getBlockUrlStorageKey(domain);
   const blockInfo = await chrome.storage.sync.get(storageKey);
+  logInDev(blockInfo);
   const isBlocked = Boolean(blockInfo[storageKey]);
   if (isBlocked) {
     const focusUrl = getExtensionFocusPage();
@@ -38,16 +41,9 @@ async function main() {
       data: {
         url: focusUrl
       }
-    })
+    });
   } else {
-    // const focusUrl = getExtensionFocusPage();
-    // chrome.runtime.sendMessage<EventParams>({
-    //   eventName: EventName.UpdateUrl,
-    //   data: {
-    //     url: focusUrl
-    //   }
-    // })
   }
 }
 
-main()
+main();
