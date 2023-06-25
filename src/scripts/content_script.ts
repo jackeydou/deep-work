@@ -1,6 +1,6 @@
 import { EventParams } from '../types/event';
 import { getBlockUrlStorageKey } from '../utils/index';
-import { EventName } from '../utils/constants';
+import { EventName, StorageKey } from '../utils/constants';
 import { logInDev } from '../utils/dev';
 
 
@@ -14,14 +14,25 @@ function getExtensionFocusPage() {
 
 function addListener() {
   chrome.runtime.onMessage.addListener((message: EventParams, sender) => {
-    const { eventName } = message
-    if (eventName === EventName.GetCurrentContextMenuClickDomain) {
-      chrome.runtime.sendMessage({
-        eventName: EventName.AddToBlockListKey,
-        data: {
-          url: getCurrentDomain()
-        }
-      })
+    if (sender.id === chrome.runtime.id) {
+      const { eventName } = message
+      if (eventName === EventName.AddToBlockListKey) {
+        chrome.storage.sync.get(StorageKey.BlockUrlListKey).then(result => {
+          const domain = getCurrentDomain();
+          const blockDomains = result[StorageKey.BlockUrlListKey] as string[] ?? [];
+          const hasBeenBlocked = blockDomains.findIndex(it => it === domain) >= 0;
+          logInDev('hasBeenBlocked', hasBeenBlocked)
+          if (!hasBeenBlocked) {
+            chrome.storage.sync.set({
+              [StorageKey.BlockUrlListKey]: [
+                ...blockDomains,
+                domain,
+              ],
+              [getBlockUrlStorageKey(domain)]: true
+            });
+          }
+        })
+      }
     }
   })
 }

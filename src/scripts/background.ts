@@ -1,6 +1,8 @@
 import { EventParams, UpdateUrlData } from "../types/event";
 import { getBlockUrlStorageKey } from '../utils/index';
 import { EventName, StorageKey } from '../utils/constants';
+import { logInDev } from "../utils/dev";
+
 
 function setContextMenu() {
   chrome.contextMenus.create({
@@ -10,19 +12,27 @@ function setContextMenu() {
   chrome.contextMenus.create({
     title: "Add to White List",
     id: EventName.AddToWhiteListKey,
-  })
+  });
 }
 
 function addListener() {
-  chrome.contextMenus.onClicked.addListener(function(clickData) {
+  chrome.contextMenus.onClicked.addListener(async function(clickData) {
     if (clickData.menuItemId == EventName.AddToBlockListKey) {
-      chrome.runtime.sendMessage<EventParams>({
-        eventName: EventName.GetCurrentContextMenuClickDomain,
-        data: {
-        }
-      })
+      const [tab] = await chrome.tabs.query({active: true, lastFocusedWindow: true});
+      if (tab?.id) {
+        const response = await chrome.tabs.sendMessage<EventParams>(tab.id, {
+          eventName: EventName.AddToBlockListKey,
+          data: {
+          }
+        });
+        logInDev('contextMenus.onClicked', response);
+      }
+
+    } else if (clickData.menuItemId === EventName.AddToWhiteListKey) {
+
     }
   });
+
   chrome.runtime.onMessage.addListener((message: EventParams, sender) => {
     if (sender.id === chrome.runtime.id) {
       const { eventName, data } = message;
@@ -30,25 +40,15 @@ function addListener() {
         chrome.tabs.update({
           url: (data as UpdateUrlData).url
         })
-      } else if (eventName === EventName.AddToBlockListKey) {
-        chrome.storage.sync.get(StorageKey.BlockUrlListKey).then(result => {
-          const domain = (data as UpdateUrlData).url;
-          const blockDomains = result[StorageKey.BlockUrlListKey] as string[] ?? [];
-          const hasBeenBlocked = blockDomains.findIndex(it => it === domain);
-          if (!hasBeenBlocked) {
-            chrome.storage.sync.set({
-              [StorageKey.BlockUrlListKey]: [
-                ...blockDomains,
-                domain,
-              ],
-              [getBlockUrlStorageKey(domain)]: true
-            });
-          }
-        })
       }
     }
   })
 }
 
-setContextMenu();
-addListener();
+
+function main() {
+  setContextMenu();
+  addListener();
+}
+
+main();

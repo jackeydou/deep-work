@@ -4,7 +4,6 @@ const CopyPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const srcDir = path.join(__dirname, "..", "src");
-
 module.exports = {
     entry: {
       popup: path.join(srcDir, 'pages/popup.tsx'),
